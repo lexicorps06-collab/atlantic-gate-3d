@@ -358,7 +358,7 @@
   // --- port yard, stacks and backdrop
   function buildYard() {
     var N = 'static';
-    add(N, rbox(400, 0.4, 150, 0, 1), PAL.ground, T(0, -0.2, 10));          // yard slab
+    add(N, rbox(400, 0.4, 230, 0, 1), PAL.ground, T(0, -0.2, 50));          // yard slab
     add(N, rbox(400, 1.6, 2.0, 0.05, 2), PAL.quay, T(0, -0.6, -66));          // quay edge
     add(N, rbox(900, 0.2, 700, 0, 1), PAL.sea, T(0, -1.4, -420));              // sea
     var cols = [CONT.orange, CONT.white, CONT.teal, CONT.navy2, CONT.maroon, CONT.grey, CONT.sand, CONT.navy];
@@ -377,8 +377,8 @@
     stack(-7.6, -14, 3, 2, 4, 3);
     stack(-27, -22, 4, 2, 4, 7);
     stack(-40, -40, 4, 2, 3, 5);
-    stack(14, -36, 4, 2, 4, 9);
-    stack(24, -12, 3, 3, 3, 13);
+    stack(27, -46, 4, 2, 4, 9);
+    stack(24, -8, 3, 2, 3, 13);
     // lane markings handled in the ground shader; kerbs + bollards near quay
     for (var x = -60; x <= 60; x += 9) add(N, cyl(0.22, 0.6, 12), PAL.craneDark, T(x, 0.3, -64.7));
     // light masts
@@ -397,6 +397,20 @@
       beam(N, F, [x, 37, z - 20], [x, 55, z - 4], 1.0);
       beam(N, F, [x, 55, z - 4], [x, 37, z + 30], 0.6);
     });
+    // port entrance gate (the truck leaves through it)
+    var GZ = 52, gx0 = -0.2, gx1 = 12.8;
+    [gx0, gx1].forEach(function (x) { boxAt(N, PAL.white, x, 4.2, GZ, 1.3, 8.4, 1.3, 0.12); boxAt(N, PAL.craneDark, x, 0.3, GZ, 1.6, 0.6, 1.6, 0.06); });
+    boxAt(N, PAL.craneOrange, (gx0 + gx1) / 2, 8.7, GZ, gx1 - gx0 + 2.2, 1.0, 2.2, 0.1);
+    boxAt(N, PAL.sign, (gx0 + gx1) / 2 - 0.25, 7.2, GZ + 1.18, 11.0, 1.35, 0.12, 0.03);
+    for (var lx = gx0 + 1.5; lx < gx1 - 1; lx += 2.2) boxAt(N, PAL.lamp, lx, 8.18, GZ - 0.5, 1.2, 0.06, 0.5, 0.02);
+    // gatehouse + raised barrier arm
+    boxAt(N, PAL.white, -3.4, 1.6, GZ, 3.2, 3.2, 3.6, 0.15); boxAt(N, PAL.glass, -3.4, 2.0, GZ + 1.82, 2.6, 1.3, 0.05, 0.03);
+    boxAt(N, PAL.craneDark, -3.4, 3.3, GZ, 3.6, 0.25, 4.0, 0.05);
+    boxAt(N, PAL.craneDark, 1.2, 0.6, GZ - 2.2, 0.5, 1.2, 0.5, 0.06);
+    boxAt(N, PAL.craneOrange, 1.2, 3.9, GZ - 2.2, 0.16, 6.2, 0.16, 0.03, RZ(-0.12));
+    // fence either side of the gate
+    for (var fx = -40; fx <= 40; fx += 3.2) { if (fx > -6 && fx < 15) continue; boxAt(N, PAL.steel, fx, 1.3, GZ, 0.1, 2.6, 0.1, 0.02); }
+    [[-40, -5.2], [15.2, 40]].forEach(function (r) { boxAt(N, PAL.steel, (r[0] + r[1]) / 2, 2.5, GZ, r[1] - r[0], 0.08, 0.06, 0.01); boxAt(N, PAL.steel, (r[0] + r[1]) / 2, 0.9, GZ, r[1] - r[0], 0.06, 0.06, 0.01); });
     // container ship at berth
     var sz = -86;
     add(N, rbox(190, 14, 32, 2.5, 3), PAL.hull, T(10, 4, sz));
@@ -565,11 +579,11 @@
     function state(t) {
       var s = {};
       // truck arrives (0.12–0.46), waits, leaves (0.84–1)
-      var arrive = smooth(0.10, 0.46, t), leave = smooth(0.84, 1.0, t);
-      s.truckZ = lerp(-44, 8.3, arrive) + leave * 26;
-      s.wheelSpin = (s.truckZ + 44) / 0.52;
+      var arrive = smooth(0.02, 0.33, t), leave = smooth(0.70, 1.0, t);
+      s.truckZ = lerp(-57, 8.3, arrive) + leave * 41.5;
+      s.wheelSpin = (s.truckZ + 57) / 0.52;
       // trolley position + hoist height (height of container bottom above ground)
-      var lift = smooth(0.06, 0.24, t), travel = smooth(0.26, 0.50, t), lower = smooth(0.52, 0.72, t), release = smooth(0.74, 0.84, t);
+      var lift = smooth(0.08, 0.24, t), travel = smooth(0.30, 0.46, t), lower = smooth(0.48, 0.62, t), release = smooth(0.62, 0.70, t);
       s.trolleyX = lerp(PICK.x, LANE_X, travel);
       var pickBottom = PICK.y - CH / 2, carryBottom = 13.8, dropBottom = TRAILER_TOP - CH / 2;
       var cb = lerp(pickBottom, carryBottom, lift); cb = lerp(cb, dropBottom, lower);
@@ -581,11 +595,13 @@
       return s;
     }
     var CAM = [ // t, eye, target, fov
-      [0.00, [-31, 13, 44], [-4.5, 11.5, 0], 36],
-      [0.30, [-33, 12, 47], [-2.5, 10.5, 0], 37],
-      [0.62, [-30, 10, 50], [0, 8.5, 2], 38],
-      [0.84, [-27, 8.5, 52], [3, 6.8, 5], 38],
-      [1.00, [-30, 8.5, 58], [6, 6.5, 10], 38]
+      [0.00, [22, 34, 24], [4, 0, -44], 42],
+      [0.16, [20, 23, 38], [4, 2.5, -20], 41],
+      [0.33, [-31, 13, 44], [-2, 10.2, 0], 37],
+      [0.50, [-30, 11, 48], [0.5, 8.2, 1], 38],
+      [0.66, [-27, 9, 52], [3.5, 6.2, 5], 38],
+      [0.84, [-20, 7.5, 70], [6.3, 4.2, 30], 40],
+      [1.00, [-11, 5.6, 76], [6.3, 3.6, 47], 40]
     ];
     function camAt(t) {
       for (var i = 0; i < CAM.length - 1; i++) if (t <= CAM[i + 1][0]) break;
@@ -631,7 +647,8 @@
       if (override) cam = override;
       if (W / Hh < 1) {
         var asp = W / Hh, f = cam.fov * Math.PI / 180, hf = Math.atan(Math.tan(f / 2) * (16 / 9));
-        cam = { eye: [cam.eye[0] * 0.74, cam.eye[1] * 0.85, cam.eye[2] * 0.74], target: [cam.target[0] + 3, cam.target[1] + 2.2, cam.target[2]],
+        var tg = cam.target, ey = cam.eye;
+        cam = { eye: [tg[0] + (ey[0] - tg[0]) * 0.8, tg[1] + (ey[1] - tg[1]) * 0.85, tg[2] + (ey[2] - tg[2]) * 0.8], target: [tg[0] + 2, tg[1] + 1.6, tg[2]],
                 fov: 2 * Math.atan(Math.tan(hf * 0.74) / asp) * 180 / Math.PI };
       }
       // shadow pass (sun, ortho box around the action)

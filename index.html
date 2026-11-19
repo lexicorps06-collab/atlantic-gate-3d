@@ -581,7 +581,7 @@ var CONFIG = {
   var frameDir = portrait ? 'media/f/m/' : 'media/f/d/';
   var imgs = new Array(FRAMES), drawn = -1, failures = 0, useVideo = false, frameW = portrait ? 810 : 1440;
   if (portrait){ FW = 810; FH = 1440; }
-  var LAST = 108;                 // final frame used: the truck has its container and is still in shot
+  var LAST = FRAMES - 1;          // full sequence: quay -> crane -> out through the port gate
   duration = (LAST + 0.5) / FPS;
   function frameUrl(i){ return frameDir + ('00' + (i + 1)).slice(-3) + '.webp'; }
   function loadFrame(i){
