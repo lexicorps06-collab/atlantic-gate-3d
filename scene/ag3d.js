@@ -603,9 +603,19 @@
       [0.84, [-20, 7.5, 70], [6.3, 4.2, 30], 40],
       [1.00, [-11, 5.6, 76], [6.3, 3.6, 47], 40]
     ];
-    function camAt(t) {
-      for (var i = 0; i < CAM.length - 1; i++) if (t <= CAM[i + 1][0]) break;
-      var a = CAM[i], b = CAM[Math.min(i + 1, CAM.length - 1)], k = smooth(a[0], b[0], t);
+    var CAM_P = [ // portrait: tall frame, camera closer to the action
+      [0.00, [15, 27, -12], [6, 1.5, -56], 52],
+      [0.16, [25, 30, 18], [6, 2.5, -20], 52],
+      [0.33, [-19, 14, 35], [0.5, 8.8, 0], 58],
+      [0.50, [-18, 12, 37], [2.5, 7.6, 0.5], 58],
+      [0.66, [-15, 9.5, 39], [5, 5.8, 4], 56],
+      [0.84, [-1, 8, 72], [6.3, 4, 32], 50],
+      [1.00, [1.5, 6.6, 78], [6.3, 4.2, 47], 46]
+    ];
+    function camAt(t, portraitCam) {
+      var C = portraitCam ? CAM_P : CAM;
+      for (var i = 0; i < C.length - 1; i++) if (t <= C[i + 1][0]) break;
+      var a = C[i], b = C[Math.min(i + 1, C.length - 1)], k = smooth(a[0], b[0], t);
       function mixv(u, v) { return [lerp(u[0], v[0], k), lerp(u[1], v[1], k), lerp(u[2], v[2], k)]; }
       return { eye: mixv(a[1], b[1]), target: mixv(a[2], b[2]), fov: lerp(a[3], b[3], k) };
     }
@@ -643,14 +653,8 @@
     }
 
     function render(t, override) {
-      var W = canvas.width, Hh = canvas.height, M = nodeMatrices(t), cam = camAt(t);
+      var W = canvas.width, Hh = canvas.height, M = nodeMatrices(t), cam = camAt(t, W / Hh < 1);
       if (override) cam = override;
-      if (W / Hh < 1) {
-        var asp = W / Hh, f = cam.fov * Math.PI / 180, hf = Math.atan(Math.tan(f / 2) * (16 / 9));
-        var tg = cam.target, ey = cam.eye;
-        cam = { eye: [tg[0] + (ey[0] - tg[0]) * 0.8, tg[1] + (ey[1] - tg[1]) * 0.85, tg[2] + (ey[2] - tg[2]) * 0.8], target: [tg[0] + 2, tg[1] + 1.6, tg[2]],
-                fov: 2 * Math.atan(Math.tan(hf * 0.74) / asp) * 180 / Math.PI };
-      }
       // shadow pass (sun, ortho box around the action)
       var c = [2, 6, 0], sd = env.sun;
       var sv = lookAt([c[0] + sd[0] * 80, c[1] + sd[1] * 80, c[2] + sd[2] * 80], c, [0, 1, 0]);

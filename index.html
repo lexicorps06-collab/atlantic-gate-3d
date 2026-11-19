@@ -253,7 +253,8 @@ body.menu-open .wa-fab,body.menu-open .wa-pop{display:none}
   .intro .ctas{display:none}
   .cta-mob{display:flex;flex-wrap:wrap;gap:12px;position:absolute;z-index:6;left:20px;right:20px;
     bottom:calc(88px + env(safe-area-inset-bottom));opacity:var(--intro)}
-  .scrim{background:linear-gradient(180deg,rgba(242,228,208,.92) 0%,rgba(242,228,208,.62) 30%,rgba(242,228,208,0) 46%)}
+  .scrim{background:linear-gradient(180deg,rgba(242,228,208,.96) 0%,rgba(242,228,208,.86) 28%,rgba(242,228,208,.5) 42%,rgba(242,228,208,0) 56%)}
+  .intro p{color:#1F3347}
   .cta-mob .pill{flex:1 1 150px;min-height:52px}
   .cta-mob .pill.line{border-color:var(--navy);color:var(--navy);background:rgba(255,255,255,.55)}
   .cta-mob .pill.line:hover{background:var(--navy);color:#fff}
@@ -274,6 +275,21 @@ body.menu-open .wa-fab,body.menu-open .wa-pop{display:none}
   .nav .logo{font-size:21px}
   .nav-actions{gap:8px}
   .nav .pill{padding:0 14px;font-size:11px}
+}
+@media (orientation:landscape) and (max-height:520px){
+  .nav{padding:10px 20px}
+  .intro{top:62px;left:24px;width:46vw}
+  .intro h1{font-size:clamp(28px,5.2vw,40px)}
+  .intro p{display:none}
+  .intro .ctas{margin-top:14px}
+  .intro .ctas .pill{min-height:44px;padding:0 18px}
+  .strip{top:calc(40*var(--u))}
+  .lead h2{font-size:calc(46*var(--u))}
+  .lead .copy p{font-size:max(11px,calc(12*var(--u)))}
+  .card h3{font-size:max(15px,calc(26*var(--u)))}
+  .card p{font-size:max(11px,calc(12.4*var(--u)))}
+  .wa-fab{padding:0;width:52px;min-height:52px;justify-content:center;right:14px;bottom:14px}
+  .wa-fab .t{display:none}
 }
 @media (prefers-reduced-motion:reduce){ .band-pill,.speed,.nav{transition:none} html{scroll-behavior:auto} }
 </style>
@@ -553,7 +569,7 @@ var CONFIG = {
     sd:  [],
     poster: ['media/poster.webp']
   };
-  var A_DESK = 2.4, A_PHONE = 1.7, B_DESK = 1.1, B_PHONE = 0.6;
+  var A_DESK = 2.4, A_PHONE = 2.5, B_DESK = 1.1, B_PHONE = 0.6;
   var FW = 1440, FH = 810, BAND_RISE = 0.32;
   var root = document.documentElement;
   var track = document.getElementById('top');
@@ -658,13 +674,15 @@ var CONFIG = {
     vw = root.clientWidth || window.innerWidth; vh = scene.clientHeight || window.innerHeight;
     phone = vw < 768 || vw <= vh;
     A = phone ? A_PHONE : A_DESK;
-    var u = phone ? Math.min(vw/430, 1.4) : Math.min(vw/1440, vh/960);
+    var shortLand = !phone && vh < 520;
+    var u = phone ? Math.min(vw/430, 1.4) : Math.max(Math.min(vw/1440, vh/960), shortLand ? 0.62 : 0);
     root.style.setProperty('--u', u + 'px');
 
     // cover the screen with the scene; on wide screens keep the crane right of the headline
     var s = Math.max(vw/FW, vh/FH), W = FW*s, H = FH*s;
     var left = portrait ? (vw - W)/2 : Math.min(0, vw - W), top = (vh - H)/2;
-    baseLeft = left; baseTop = top; lift = (phone ? 0.24 : 0.25) * vh;
+    var bandFrac = phone ? 0.46 : (shortLand ? 0.66 : 0.5), truckFrac = portrait ? 0.74 : 0.76;
+    baseLeft = left; baseTop = top; lift = Math.max(0, truckFrac - (1 - bandFrac) + 0.015) * vh;
     [video, canvas].forEach(function(el){
       el.style.width = W + 'px'; el.style.height = H + 'px';
       el.style.transform = 'translate3d(' + left + 'px,' + top + 'px,0)';
@@ -673,7 +691,7 @@ var CONFIG = {
     var cw = Math.round(Math.min(W * dpr, frameW)), ch = Math.round(cw * FH / FW);
     if (canvas.width !== cw || canvas.height !== ch){ canvas.width = cw; canvas.height = ch; drawn = -1; }
     lastW = vw; lastH = window.innerHeight;
-    scene.style.setProperty('--band-h', (phone ? 0.56 : 0.5) * vh + 'px');
+    scene.style.setProperty('--band-h', bandFrac * vh + 'px');
 
     stripW = strip.scrollWidth; giantW = giant.scrollWidth;
     B = (stripW + 0.45*vw) / vw * (phone ? B_PHONE : B_DESK);
